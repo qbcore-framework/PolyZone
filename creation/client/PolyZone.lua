@@ -24,7 +24,7 @@ function polyStart(name)
 end
 
 function polyFinish()
-  TriggerServerEvent("polyzone:printPoly",
+  TriggerServerEvent("polyzone:save", "poly",
     {name=createdZone.name, points=createdZone.points, minZ=minZ, maxZ=maxZ})
 end
 

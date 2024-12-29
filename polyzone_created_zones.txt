@@ -1,0 +1,26 @@
+
+--Name: nbjk | 2024-12-29T19:39:45Z
+CircleZone:Create(vector3(-1279.0, -437.0, 34.0), 5.0, {
+ name="nbjk",
+ useZ=false,
+ debugPoly = false
+})
+
+--Name: ffd | 2024-12-29T19:41:04Z
+PolyZone:Create({
+  vector2(-1278.7797851562, -437.09411621094),
+  vector2(-1279.2325439454, -434.64193725586),
+  vector2(-1280.7967529296, -436.04263305664)
+},{
+  name="ffd",
+  --minZ = 34.332248687744,
+  --maxZ = 34.484119415284, 
+  debigPoly = false
+})
+
+--Name: gfdsg | 2024-12-29T19:41:49Z
+BoxZone:Create(vector3(-1281.0, -436.0, 34.0), 4, 5, {
+ name="gfdsg",
+ heading=0,
+ debugPoly = false
+})

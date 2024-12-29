@@ -1,76 +1,62 @@
-RegisterNetEvent("polyzone:printPoly")
-AddEventHandler("polyzone:printPoly", function(zone)
-  file = io.open('polyzone_created_zones.txt', "a")
-  io.output(file)
-  local output = parsePoly(zone)
-  io.write(output)
-  io.close(file)
-end)
-
-RegisterNetEvent("polyzone:printCircle")
-AddEventHandler("polyzone:printCircle", function(zone)
-  file = io.open('polyzone_created_zones.txt', "a")
-  io.output(file)
-  local output = parseCircle(zone)
-  io.write(output)
-  io.close(file)
-end)
-
-RegisterNetEvent("polyzone:printBox")
-AddEventHandler("polyzone:printBox", function(zone)
-  file = io.open('polyzone_created_zones.txt', "a")
-  io.output(file)
-  local output = parseBox(zone)
-  io.write(output)
-  io.close(file)
-end)
-
-function round(num, numDecimalPlaces)
+local function round(num, numDecimalPlaces)
   local mult = 10^(numDecimalPlaces or 0)
-  return math.floor(num * mult + 0.5) / mult
+  return tostring(math.floor(num * mult + 0.5) / mult)
 end
 
-function printoutHeader(name)
-  return "--Name: " .. name .. " | " .. os.date("!%Y-%m-%dT%H:%M:%SZ\n")
+local header = function(zone)
+  local name = zone.name
+  local date = os.date("!%Y-%m-%dT%H:%M:%SZ")
+  return ("--Name: %s | %s"):format(name, date)
 end
 
-function parsePoly(zone)
-  local printout = printoutHeader(zone.name)
-  printout = printout .. "PolyZone:Create({\n"
-  for i=1, #zone.points do
-    if i ~= #zone.points then
-      printout = printout .. "  vector2(" .. tostring(zone.points[i].x) .. ", " .. tostring(zone.points[i].y) .."),\n"
-    else
-      printout = printout .. "  vector2(" .. tostring(zone.points[i].x) .. ", " .. tostring(zone.points[i].y) ..")\n"
+local center = function(zone)
+  return ("vector3(%s, %s, %s)"):format(round(zone.center.x), round(zone.center.y), round(zone.center.z))
+end
+
+local parse = {
+
+  poly = function(zone)
+    local name = zone.name
+    local date = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    local template = "%s\nPolyZone:Create({\n%s},{\n%s\n})\n"
+
+    local pointsString = ""
+    for i = 1, #zone.points do
+      pointsString = ("%s  vector2(%s, %s)%s\n"):format(pointsString, tostring(zone.points[i].x), tostring(zone.points[i].y), i ~= #zone.points and "," or "")
     end
+
+    local optionsString = ("  name=\"%s\",\n  --minZ = %s,\n  --maxZ = %s, \n  debugPoly = false"):format(name, zone.minZ, zone.maxZ)
+
+    return template:format(header(zone), pointsString, optionsString)
+  end,
+
+  circle = function(zone)
+    local name = zone.name
+    local date = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    local template = "%s\nCircleZone:Create(%s, %s, {\n name=\"%s\",\n useZ=%s,\n debugPoly = false\n})\n"
+    
+    return template:format(header(zone), center(zone), round(zone.radius), name, tostring(zone.useZ))
+  end,
+
+  box = function(zone)
+    local name = zone.name
+    local date = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    local template = "%s\nBoxZone:Create(%s, %s, %s, {\n name=\"%s\",\n heading=%s,\n debugPoly = false%s%s\n})\n"
+
+    local minZ = zone.minZ and (",\n minZ=" .. round(zone.minZ)) or ""
+    local maxZ = zone.maxZ and (",\n maxZ=" .. round(zone.maxZ)) or ""
+
+    return template:format(header(zone), center(zone), tostring(zone.length), tostring(zone.width), name, tostring(zone.heading), minZ, maxZ)
   end
-  printout = printout .. "}, {\n  name=\"" .. zone.name .. "\",\n  --minZ = " .. zone.minZ .. ",\n  --maxZ = " .. zone.maxZ .. "\n})\n\n"
-  return printout
+}
+
+local function addToTxtFile(value)
+  local file = LoadResourceFile(GetCurrentResourceName(), "polyzone_created_zones.txt") or ""
+  file = ("%s\n%s"):format(file, value)
+  local success = SaveResourceFile(GetCurrentResourceName(), "polyzone_created_zones.txt", file, -1)
+  print(("PolyZone: %s"):format(success and "Added to file" or "Failed to add to file"))
 end
 
-function parseCircle(zone)
-  local printout = printoutHeader(zone.name)
-  printout = printout .. "CircleZone:Create("
-  printout = printout .. "vector3(" .. tostring(round(zone.center.x, 2)) .. ", " .. tostring(round(zone.center.y, 2))  .. ", " .. tostring(round(zone.center.z, 2)) .."), "
-  printout = printout .. tostring(zone.radius) .. ", "
-  printout = printout .. "{\n  name=\"" .. zone.name .. "\",\n  useZ=" .. tostring(zone.useZ) .. ",\n  --debugPoly=true\n})\n\n"
-  return printout
-end
-
-function parseBox(zone)
-  local printout = printoutHeader(zone.name)
-  printout = printout .. "BoxZone:Create("
-  printout = printout .. "vector3(" .. tostring(round(zone.center.x, 2)) .. ", " .. tostring(round(zone.center.y, 2))  .. ", " .. tostring(round(zone.center.z, 2)) .."), "
-  printout = printout .. tostring(zone.length) .. ", "
-  printout = printout .. tostring(zone.width) .. ", "
-  
-  printout = printout .. "{\n  name=\"" .. zone.name .. "\",\n  heading=" .. zone.heading .. ",\n  --debugPoly=true"
-  if zone.minZ then
-    printout = printout .. ",\n  minZ=" .. tostring(round(zone.minZ, 2))
-  end
-  if zone.maxZ then
-    printout = printout .. ",\n  maxZ=" .. tostring(round(zone.maxZ, 2))
-  end
-  printout = printout .. "\n})\n\n"
-  return printout
-end
+RegisterNetEvent("polyzone:save", function(zone_type, zone)
+  addToTxtFile(parse[zone_type](zone))
+end)

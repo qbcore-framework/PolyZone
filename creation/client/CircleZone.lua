@@ -46,6 +46,6 @@ function circleStart(name, radius, useZ)
 end
 
 function circleFinish()
-  TriggerServerEvent("polyzone:printCircle",
+  TriggerServerEvent("polyzone:save", "circle",
     {name=createdZone.name, center=createdZone.center, radius=createdZone.radius, useZ=createdZone.useZ})
 end
